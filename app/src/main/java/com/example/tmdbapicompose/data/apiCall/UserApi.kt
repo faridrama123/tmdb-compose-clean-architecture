@@ -1,8 +1,10 @@
 package com.example.tmdbapicompose.data.apiCall
 
+import com.example.tmdbapicompose.data.repository.response.DataMovieResponse
 import com.example.tmdbapicompose.domain.models.GenreMovieResponse
 import com.example.tmdbapicompose.domain.models.MovieResponse
 import com.example.tmdbapicompose.domain.models.ReviewResponse
+import com.example.tmdbapicompose.domain.models.VideoMovieResponse
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -22,6 +24,11 @@ interface UserApi {
 
     @GET("movie/{Id}/reviews")
     suspend fun getMovieReview(
-        @Path("Id") movieId: Int): ReviewResponse
+        @Path("Id") movieId: Int,
+        @Query("page") page: Int): ReviewResponse
+
+    @GET("movie/{Id}/videos")
+    suspend fun getVideoMovie(
+        @Path("Id") movieId: Int): VideoMovieResponse
 
 }

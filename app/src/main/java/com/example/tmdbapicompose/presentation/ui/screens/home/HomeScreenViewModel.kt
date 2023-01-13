@@ -1,5 +1,6 @@
 package com.example.tmdbapicompose.presentation.ui.screens.home
 
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.tmdbapicompose.data.Resource
@@ -31,6 +32,17 @@ class HomeScreenViewModel
     private val _genreRes = MutableStateFlow<Resource<GenreMovieResponse>>(Resource.Initial)
     var genreRes: StateFlow<Resource<GenreMovieResponse>> = _genreRes.asStateFlow()
 
+    // Create a LiveData with a String
+    val movieId: MutableLiveData<String> by lazy {
+        MutableLiveData<String>("all")
+    }
+    val page: MutableLiveData<Int> by lazy {
+        MutableLiveData<Int>(1)
+    }
+    val lastIndex: MutableLiveData<Int> by lazy {
+        MutableLiveData<Int>(0)
+    }
+
     init {
         fetchAllGenre()
         fetchAllData("all", 1)
@@ -49,7 +61,7 @@ class HomeScreenViewModel
             }
         }
     }
-    fun fetchAllGenre() {
+    private fun fetchAllGenre() {
         logger.i("Test Genre............")
         viewModelScope.launch {
             try {

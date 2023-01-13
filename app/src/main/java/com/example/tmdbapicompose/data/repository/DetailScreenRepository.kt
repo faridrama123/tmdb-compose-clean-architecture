@@ -11,7 +11,10 @@ import javax.inject.Inject
 
 class DetailScreenRepository @Inject constructor(private val api: UserApi): SafeApiCall {
 
-    suspend fun getMovieReview(movieId: Int) = safeApiCall {
-        api.getMovieReview(movieId)
+    suspend fun getMovieReview(movieId: Int, page: Int) = safeApiCall {
+        api.getMovieReview(movieId, page)
+    }
+    suspend fun getVideoMovie(movieId: Int) = safeApiCall {
+        api.getVideoMovie(movieId)
     }
 }

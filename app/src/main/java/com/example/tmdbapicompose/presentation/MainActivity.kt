@@ -58,7 +58,7 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberAnimatedNavController()
                 var isNetwork by remember { mutableStateOf(true) }
                 networkUtil.observe(this) { isNetwork = it }
-                Log.d("info", isNetwork.toString());
+                Log.d("info", isNetwork.toString())
 
 
                 if (isNetwork) {
@@ -132,7 +132,7 @@ class MainActivity : ComponentActivity() {
                                 ) + fadeOut(animationSpec = tween(300))
                             }
                         ) {
-                            var result: Result? =
+                            val result: Result? =
                                 navController.previousBackStackEntry?.savedStateHandle?.get<Result>(
                                     "result"
                                 )

@@ -1,5 +1,6 @@
 package com.example.tmdbapicompose.presentation.ui.screens.home
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -9,11 +10,9 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
+
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,7 +24,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
@@ -43,33 +41,36 @@ import com.example.tmdbapicompose.presentation.ui.customComposables.LottieLoader
 import com.example.tmdbapicompose.presentation.ui.theme.Typography
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
-import dagger.hilt.android.lifecycle.HiltViewModel
 
 const val url = "https://image.tmdb.org/t/p/w342"
 
 @Composable
 fun HomeScreen(navController: NavHostController, logger: Logger) {
+    logger.i("Home Screen............")
+
     val viewModel = hiltViewModel<HomeScreenViewModel>()
+
     val movieState = viewModel.movieRes.collectAsState()
     val genreState = viewModel.genreRes.collectAsState()
-    val genreState_: Resource<GenreMovieResponse> = genreState.value;
-
-    when(genreState_){
+    when(val genreStateData: Resource<GenreMovieResponse> = genreState.value){
         is Resource.Success -> {
-            val genreList : List<GenreMovie> = genreState_.value.genres;
+            val genreList : List<GenreMovie> = genreStateData.value.genres
 
-            Column() {
+            Column {
                 Text(
-                    text = "Lewancon",
+                    text = "MDB Movie",
                     style = Typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(16.dp)
                 )
-                LazyRow() {
+                LazyRow {
                     items(items = genreList, itemContent = { item ->
                         Button(
                             modifier = (Modifier.padding(5.dp)),
-                            onClick = {  viewModel.fetchAllData(item.id.toString(), 1) },
+                            onClick = {
+                                viewModel.movieId.value = item.id.toString()
+                                viewModel.fetchAllData(viewModel.movieId.value!!, 1)
+                                      },
                             // Uses ButtonDefaults.ContentPadding by default
                             contentPadding = PaddingValues(
                                 start = 20.dp,
@@ -83,17 +84,18 @@ fun HomeScreen(navController: NavHostController, logger: Logger) {
                         }
                     })
                 }
-                var swipeRefreshState = rememberSwipeRefreshState(isRefreshing = true)
+                val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = true)
 
 
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    SwipeRefresh(state = swipeRefreshState, onRefresh = { viewModel.fetchAllData("all", 1) }) {
+                    SwipeRefresh(state = swipeRefreshState, onRefresh = { viewModel.movieId.value?.let {
+                        viewModel.fetchAllData(
+                            it, 1)
+                    } }) {
                         LoadStateLayout(
                             movieState = movieState.value,
-                            genreState = genreState.value,
                             navController = navController,
                             viewModel = viewModel,
-                            logger = logger
                         ){
                             swipeRefreshState.isRefreshing = !it
                         }
@@ -103,7 +105,15 @@ fun HomeScreen(navController: NavHostController, logger: Logger) {
             }
 
         }
-        else -> {}
+        is Resource.Loading -> {
+            LottieLoader(R.raw.loading)
+        }
+        is Resource.Failure -> {
+            Toast.makeText(LocalContext.current,"failed",Toast.LENGTH_SHORT).show()
+        }
+        else -> {
+
+        }
     }
 }
 
@@ -111,27 +121,19 @@ fun HomeScreen(navController: NavHostController, logger: Logger) {
 @Composable
 fun LoadStateLayout(
     movieState: Resource<MovieResponse>,
-    genreState: Resource<GenreMovieResponse>,
     navController: NavHostController,
     viewModel: HomeScreenViewModel,
-    logger: Logger,
     onLoad:(loaded:Boolean)->Unit
 ) {
 
     when (movieState) {
         is Resource.Success -> {
             onLoad(true)
-            when(genreState){
-                is Resource.Success -> {
-                    LoadMainContent(
-                        movieList = movieState.value.results,
-                        genreList = genreState.value.genres,
-                        navController = navController,
-                        viewModel = viewModel,
-                    )
-                }
-                else -> {}
-            }
+            LoadMainContent(
+                movieList = movieState.value.results,
+                navController = navController,
+                vm = viewModel,
+            )
         }
         is Resource.Loading -> {
             LottieLoader(R.raw.loading)
@@ -139,6 +141,7 @@ fun LoadStateLayout(
         }
         is Resource.Failure -> {
             onLoad(false)
+            Log.d("data failed", movieState.errorBody.toString())
             Toast.makeText(LocalContext.current,"failed",Toast.LENGTH_SHORT).show()
         }
         else -> {
@@ -151,12 +154,12 @@ fun LoadStateLayout(
 @Composable
 fun LoadMainContent(
     movieList: List<Result>,
-    genreList: List<GenreMovie>,
     navController: NavHostController,
-    viewModel: HomeScreenViewModel,
+    vm: HomeScreenViewModel,
     ) {
 
 
+    Log.d("data movieList", movieList.toString())
     Column(Modifier.fillMaxSize()) {
 
             LazyVerticalGrid(
@@ -180,8 +183,18 @@ fun LoadMainContent(
                                     superNavigate(Screen.MovieDetails.route)
                                 }
 
-                                //navController.navigate("details/$title/$release_date$poster_path/$original_language/${vote_average.toString()}/$overview")
                             }
+                        }
+                        LaunchedEffect(key1 = Unit){
+                            if (index == movieList.lastIndex) {
+                                vm.lastIndex.value = vm.lastIndex.value!! + 1
+                                if(vm.lastIndex.value!! > 1){
+                                    vm.page.value = vm.page.value!! + 1
+                                    vm.fetchAllData(vm.movieId.value!!, vm.page.value!!)
+                                    vm.lastIndex.value = 0
+                                }
+                            }
+
                         }
                     }
                 }

@@ -6,8 +6,8 @@ import kotlinx.parcelize.Parcelize
 
 data class GenreMovieResponse (
     val genres: List<GenreMovie>,
-) {
-}
+)
+
 @Parcelize
 data class GenreMovie (
     val id: Int,

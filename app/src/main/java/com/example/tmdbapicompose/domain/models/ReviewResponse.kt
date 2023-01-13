@@ -9,9 +9,8 @@ data class ReviewResponse (
     val results: List<ReviewResponseList>,
     val total_pages: Long,
     val total_results: Long
-) {
+)
 
-}
 @Parcelize
 data class ReviewResponseList (
     val author: String,

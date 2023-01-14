@@ -3,18 +3,13 @@ package com.example.tmdbapicompose.presentation.ui.screens.movieDetail
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.tmdbapicompose.data.Resource
-import com.example.tmdbapicompose.data.repository.DetailScreenRepository
-import com.example.tmdbapicompose.domain.models.ReviewResponse
-import com.example.tmdbapicompose.domain.models.ReviewResponseList
-import com.example.tmdbapicompose.domain.models.VideoMovieResponse
+import com.example.tmdbapicompose.domain.models.*
+import com.example.tmdbapicompose.domain.usecase.UseCases
 import com.example.tmdbapicompose.domain.utils.Logger
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -22,20 +17,24 @@ import javax.inject.Inject
 @HiltViewModel      //Mandatory for Hilt to Inject ViewModel
 class MovieDetailScreenViewModel
 @Inject constructor( // Hilt constructor injection
-    private val repository : DetailScreenRepository, // injecting HomeScreenRepository provided by AppModule
-    private val logger:Logger // Injecting Independent Logger.class
+    private val useCases: UseCases,
 ) //Constructor Injection
     : ViewModel() {
 
-    private val _movieRes = MutableStateFlow<Resource<ReviewResponse>>(Resource.Initial)
-    var movieRes: StateFlow<Resource<ReviewResponse>> = _movieRes.asStateFlow()
+
+    private val _movieRes = MutableStateFlow<com.example.tmdbapicompose.utils.Resource<ReviewEntity>>(
+        com.example.tmdbapicompose.utils.Resource.Loading()
+    )
+    var movieRes: StateFlow<com.example.tmdbapicompose.utils.Resource<ReviewEntity>> = _movieRes.asStateFlow()
 
 
-    private val _videoMovieRes = MutableStateFlow<Resource<VideoMovieResponse>>(Resource.Initial)
-    var videoMovieRes: StateFlow<Resource<VideoMovieResponse>> = _videoMovieRes.asStateFlow()
 
-    val cacheReview: MutableLiveData<List<ReviewResponseList>> by lazy {
-        MutableLiveData<List<ReviewResponseList>>()
+    private val _videoMovieRes = MutableStateFlow<com.example.tmdbapicompose.utils.Resource<VideoMovieEntity>>(        com.example.tmdbapicompose.utils.Resource.Loading()
+    )
+    var videoMovieRes: StateFlow<com.example.tmdbapicompose.utils.Resource<VideoMovieEntity>> = _videoMovieRes.asStateFlow()
+
+    val cacheReview: MutableLiveData<List<ReviewObjEntity>> by lazy {
+        MutableLiveData<List<ReviewObjEntity>>()
     }
 
     val page: MutableLiveData<Int> by lazy {
@@ -45,30 +44,18 @@ class MovieDetailScreenViewModel
         MutableLiveData<Int>(0)
     }
 
-    fun fetchAllData(movieId: Int, page : Int) {
-        logger.i("Test............")
+
+    fun fetchAllData(id: Int, page: Int) {
         viewModelScope.launch {
-            try {
-                _movieRes.update { Resource.Loading }
-                val res1 = async { repository.getMovieReview(movieId, page) }
-                val resultFromApi1 = res1.await()
-                _movieRes.update { resultFromApi1 }
-            } catch (exception: Exception) {
-                logger.e("LogException", exception)
-            }
+            _movieRes.value =
+                useCases.getReviewMovieUseCase(id, page)
         }
     }
-    fun fetchVideoMovie(movieId: Int) {
-        logger.i("Test............")
+    fun fetchVideoMovie(id: Int) {
         viewModelScope.launch {
-            try {
-                _videoMovieRes.update { Resource.Loading }
-                val res1 = async { repository.getVideoMovie(movieId) }
-                val resultFromApi1 = res1.await()
-                _videoMovieRes.update { resultFromApi1 }
-            } catch (exception: Exception) {
-                logger.e("LogException", exception)
-            }
+            _videoMovieRes.value =
+                useCases.getVideoUseCase(id)
         }
     }
+
 }

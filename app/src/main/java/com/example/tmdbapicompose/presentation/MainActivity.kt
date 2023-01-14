@@ -22,7 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.tmdbapicompose.R
-import com.example.tmdbapicompose.domain.models.Result
+import com.example.tmdbapicompose.domain.models.MoviePopularObjEntity
 import com.example.tmdbapicompose.domain.utils.Logger
 import com.example.tmdbapicompose.domain.utils.NetworkUtil
 import com.example.tmdbapicompose.presentation.navigation.Screen
@@ -83,12 +83,12 @@ class MainActivity : ComponentActivity() {
                         composable(
                             route = Screen.Home.route,
                             enterTransition = {
-                                              slideInHorizontally(
-                                                  animationSpec = tween(
-                                                      durationMillis = 300,
-                                                      easing = FastOutSlowInEasing
-                                                  )
-                                              ) + fadeIn(animationSpec = tween(300))
+                                slideInHorizontally(
+                                    animationSpec = tween(
+                                        durationMillis = 300,
+                                        easing = FastOutSlowInEasing
+                                    )
+                                ) + fadeIn(animationSpec = tween(300))
                             },
                             exitTransition = {     //Animation for home screen while navigating to detail screen
                                 slideOutHorizontally(
@@ -132,11 +132,13 @@ class MainActivity : ComponentActivity() {
                                 ) + fadeOut(animationSpec = tween(300))
                             }
                         ) {
-                            val result: Result? =
-                                navController.previousBackStackEntry?.savedStateHandle?.get<Result>(
+                            val result: MoviePopularObjEntity? =
+                                navController.previousBackStackEntry?.savedStateHandle?.get<MoviePopularObjEntity>(
                                     "result"
                                 )
-                            MovieDetailScreen(navController, result = result)
+                            if (result != null) {
+                                MovieDetailScreen(navController, result)
+                            }
                         }
                     }
 

@@ -37,17 +37,17 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.tmdbapicompose.R
-import com.example.tmdbapicompose.data.Resource
 import com.example.tmdbapicompose.domain.models.*
 import com.example.tmdbapicompose.presentation.ui.customComposables.LottieLoader
+import com.example.tmdbapicompose.utils.Resource
 
 @Composable
-fun MovieDetailScreen(navController: NavHostController, result: Result?) {
+fun MovieDetailScreen(navController: NavHostController, result: MoviePopularObjEntity) {
     val viewModel = hiltViewModel<MovieDetailScreenViewModel>()
-    result?.id?.let {
-        viewModel.fetchAllData(it, 1)
-        viewModel.fetchVideoMovie(it)
-    }
+
+    viewModel.fetchAllData(result.id, 1)
+    viewModel.fetchVideoMovie(result.id)
+
     val movieState = viewModel.movieRes.collectAsState()
     val videoMovieState = viewModel.videoMovieRes.collectAsState()
 
@@ -55,7 +55,7 @@ fun MovieDetailScreen(navController: NavHostController, result: Result?) {
     Surface(
         modifier = Modifier.fillMaxSize()
     ) {
-        result?.let {
+        result.let {
             val url = "https://image.tmdb.org/t/p/w342/${it.poster_path}"
             Column {
                 Row {
@@ -129,7 +129,7 @@ fun MovieDetailScreen(navController: NavHostController, result: Result?) {
                                     fontSize = 12.sp
                                 )
                                 Text(
-                                    text = it.release_date,
+                                    text = it.release_date!!,
                                     color = colorScheme.onTertiary,
                                     fontSize = 14.sp
                                 )
@@ -144,7 +144,7 @@ fun MovieDetailScreen(navController: NavHostController, result: Result?) {
                     modifier = Modifier
                         .background(colorScheme.onPrimary)
                         .padding(20.dp)
-                            .verticalScroll(rememberScrollState())
+                        .verticalScroll(rememberScrollState())
                 ) {
                     Text(
                         text = "Trailer",
@@ -190,7 +190,7 @@ fun MovieDetailScreen(navController: NavHostController, result: Result?) {
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun LoadVideo(
-    videoMovieState: Resource<VideoMovieResponse>,
+    videoMovieState: Resource<VideoMovieEntity>,
 ) {
 
     when (videoMovieState) {
@@ -207,7 +207,7 @@ fun LoadVideo(
                         }
                     },
                     update = {
-                        it.loadUrl("https://www.youtube.com/watch?v=${videoMovieState.value.results[0].key}")
+                        it.loadUrl("https://www.youtube.com/watch?v=${videoMovieState.data?.results?.get(0)?.key}")
                     },
                     modifier = Modifier.fillMaxSize()
                 )
@@ -218,12 +218,10 @@ fun LoadVideo(
         is Resource.Loading -> {
             LottieLoader(R.raw.loading)
         }
-        is Resource.Failure -> {
+        is Resource.Error -> {
             Toast.makeText(LocalContext.current,"failed", Toast.LENGTH_SHORT).show()
         }
-        else -> {
 
-        }
     }
 
 }
@@ -231,7 +229,7 @@ fun LoadVideo(
 
 @Composable
 fun LoadStateLayout(
-    movieState: Resource<ReviewResponse>,
+    movieState: Resource<ReviewEntity>,
     vm: MovieDetailScreenViewModel,
     movieId: Int,
 
@@ -239,43 +237,44 @@ fun LoadStateLayout(
 
     when (movieState) {
         is Resource.Success -> {
-            val reviewList : List<ReviewResponseList> = movieState.value.results
+            val reviewList : List<ReviewObjEntity> = movieState.data!!.results
+            val reviewCacheList = vm.cacheReview
 
+            Log.d("size of review", reviewList.size.toString())
             if(reviewList.isNotEmpty()) {
-                vm.cacheReview.value = reviewList
+                reviewCacheList.value = reviewList
             }
-            LazyColumn  {
-                itemsIndexed(vm.cacheReview.value!!) { index, it ->
-                    Text(text = it.author, color = Color.Blue, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 0.dp))
-                    if(it.author_details.rating != null) {
+            if(reviewCacheList.value !== null){
+                LazyColumn  {
+                    itemsIndexed(reviewCacheList.value!!) { index, it ->
+                        Text(text = it.author, color = Color.Blue, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 0.dp))
                         Text(text = "${it.author_details.rating}/10", color = Color.Black, fontSize = 14.sp, modifier = Modifier.padding(horizontal = 0.dp))
-                    }
-                    Text(text = it.content, color = Color.Black, maxLines = 2, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 0.dp))
-                    Spacer(modifier = Modifier.height(20.dp))
-                    LaunchedEffect(key1 = Unit){
-                        if (index == reviewList.lastIndex) {
-                            Log.d("lastIndex", index.toString())
-                            vm.lastIndex.value = vm.lastIndex.value!! + 1
-                            if(vm.lastIndex.value!! > 0){
-                                vm.page.value = vm.page.value!! + 1
-                                vm.fetchAllData(movieId, vm.page.value!!)
-                                vm.lastIndex.value = 0
+                        Text(text = it.content, color = Color.Black, maxLines = 2, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 0.dp))
+                        Spacer(modifier = Modifier.height(20.dp))
+                        LaunchedEffect(key1 = Unit){
+                            if (index == reviewCacheList.value!!.lastIndex) {
+                                vm.lastIndex.value = vm.lastIndex.value!! + 1
+                                if(vm.lastIndex.value!! > 0){
+                                    vm.page.value = vm.page.value!! + 1
+                                    vm.fetchAllData(movieId, vm.page.value!!)
+                                    vm.lastIndex.value = 0
+                                }
                             }
-                        }
 
+                        }
                     }
                 }
+
             }
+
         }
         is Resource.Loading -> {
             LottieLoader(R.raw.loading)
         }
-        is Resource.Failure -> {
+        is Resource.Error -> {
             Toast.makeText(LocalContext.current,"failed", Toast.LENGTH_SHORT).show()
         }
-        else -> {
 
-        }
     }
 
 }

@@ -24,6 +24,7 @@ object AppModule {
         return remoteDataSource.buildApi(UserApi::class.java)
     }
 
+
     @Provides
     @Singleton
     fun provideNetworkUtil(@ApplicationContext context: Context) : NetworkUtil {

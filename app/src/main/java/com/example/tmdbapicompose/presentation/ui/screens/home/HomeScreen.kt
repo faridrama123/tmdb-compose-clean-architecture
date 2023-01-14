@@ -28,17 +28,18 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.tmdbapicompose.R
-import com.example.tmdbapicompose.data.Resource
-import com.example.tmdbapicompose.domain.models.GenreMovie
-import com.example.tmdbapicompose.domain.models.GenreMovieResponse
-import com.example.tmdbapicompose.domain.models.MovieResponse
-import com.example.tmdbapicompose.domain.models.Result
+import com.example.tmdbapicompose.domain.models.GenreMovieEntity
+import com.example.tmdbapicompose.domain.models.GenreMovieObjEntity
+
+import com.example.tmdbapicompose.domain.models.MoviePopularEntity
+import com.example.tmdbapicompose.domain.models.MoviePopularObjEntity
 import com.example.tmdbapicompose.domain.utils.Logger
 import com.example.tmdbapicompose.domain.utils.superNavigate
 import com.example.tmdbapicompose.presentation.navigation.Screen
 import com.example.tmdbapicompose.presentation.ui.customComposables.CenterCircularProgressBar
 import com.example.tmdbapicompose.presentation.ui.customComposables.LottieLoader
 import com.example.tmdbapicompose.presentation.ui.theme.Typography
+import com.example.tmdbapicompose.utils.Resource
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
@@ -49,12 +50,11 @@ fun HomeScreen(navController: NavHostController, logger: Logger) {
     logger.i("Home Screen............")
 
     val viewModel = hiltViewModel<HomeScreenViewModel>()
-
     val movieState = viewModel.movieRes.collectAsState()
     val genreState = viewModel.genreRes.collectAsState()
-    when(val genreStateData: Resource<GenreMovieResponse> = genreState.value){
+    when(val genreStateData: Resource<GenreMovieEntity> = genreState.value){
         is Resource.Success -> {
-            val genreList : List<GenreMovie> = genreStateData.value.genres
+            val genreList : List<GenreMovieObjEntity> = genreStateData.data?.genres!!
 
             Column {
                 Text(
@@ -80,7 +80,7 @@ fun HomeScreen(navController: NavHostController, logger: Logger) {
                             )
                         ) {
                             // Inner content including an icon and a text label
-                            Text(item.name)
+                            Text(item.name!!)
                         }
                     })
                 }
@@ -108,7 +108,7 @@ fun HomeScreen(navController: NavHostController, logger: Logger) {
         is Resource.Loading -> {
             LottieLoader(R.raw.loading)
         }
-        is Resource.Failure -> {
+        is Resource.Error -> {
             Toast.makeText(LocalContext.current,"failed",Toast.LENGTH_SHORT).show()
         }
         else -> {
@@ -120,28 +120,27 @@ fun HomeScreen(navController: NavHostController, logger: Logger) {
 
 @Composable
 fun LoadStateLayout(
-    movieState: Resource<MovieResponse>,
+    movieState: com.example.tmdbapicompose.utils.Resource<MoviePopularEntity>,
     navController: NavHostController,
     viewModel: HomeScreenViewModel,
     onLoad:(loaded:Boolean)->Unit
 ) {
 
     when (movieState) {
-        is Resource.Success -> {
+        is com.example.tmdbapicompose.utils.Resource.Success -> {
             onLoad(true)
             LoadMainContent(
-                movieList = movieState.value.results,
+                movieList = movieState.data?.results!!,
                 navController = navController,
                 vm = viewModel,
             )
         }
-        is Resource.Loading -> {
+        is com.example.tmdbapicompose.utils.Resource.Loading -> {
             LottieLoader(R.raw.loading)
             onLoad(false)
         }
-        is Resource.Failure -> {
+        is com.example.tmdbapicompose.utils.Resource.Error -> {
             onLoad(false)
-            Log.d("data failed", movieState.errorBody.toString())
             Toast.makeText(LocalContext.current,"failed",Toast.LENGTH_SHORT).show()
         }
         else -> {
@@ -153,7 +152,7 @@ fun LoadStateLayout(
 
 @Composable
 fun LoadMainContent(
-    movieList: List<Result>,
+    movieList: List<MoviePopularObjEntity>,
     navController: NavHostController,
     vm: HomeScreenViewModel,
     ) {
@@ -203,7 +202,7 @@ fun LoadMainContent(
 }
 
 @Composable
-fun ItemView(result: Result, onItemClicked: () -> Unit) {
+fun ItemView(result: MoviePopularObjEntity, onItemClicked: () -> Unit) {
     Column(
         verticalArrangement = Arrangement.Center,
         modifier = Modifier

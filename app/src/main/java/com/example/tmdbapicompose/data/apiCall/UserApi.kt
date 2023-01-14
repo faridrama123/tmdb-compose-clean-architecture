@@ -1,10 +1,10 @@
 package com.example.tmdbapicompose.data.apiCall
 
-import com.example.tmdbapicompose.data.repository.response.DataMovieResponse
-import com.example.tmdbapicompose.domain.models.GenreMovieResponse
-import com.example.tmdbapicompose.domain.models.MovieResponse
-import com.example.tmdbapicompose.domain.models.ReviewResponse
-import com.example.tmdbapicompose.domain.models.VideoMovieResponse
+import com.example.tmdbapicompose.data.repository.response.GenreMovieResponse
+import com.example.tmdbapicompose.data.repository.response.MoviePopularResponse
+import com.example.tmdbapicompose.data.repository.response.ReviewResponse
+import com.example.tmdbapicompose.data.repository.response.VideoMovieResponse
+import com.example.tmdbapicompose.domain.models.*
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -14,10 +14,11 @@ import retrofit2.http.Query
  */
 
 interface UserApi {
+
     @GET("movie/popular")
-    suspend fun getMovieList(
+    suspend fun getMovieList2(
         @Query("with_genres") genre: String,
-        @Query("page") page: Int): MovieResponse
+        @Query("page") page: Int): MoviePopularResponse
 
     @GET("genre/movie/list")
     suspend fun getGenreMovie(): GenreMovieResponse

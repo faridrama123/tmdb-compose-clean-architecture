@@ -10,6 +10,8 @@ import okhttp3.ResponseBody
 
 sealed interface Resource<out T> {
     data class Success<out T>(val value: T) : Resource<T>
+    data class Error(val errorMessage: String) : Resource<Nothing>
+    object Empty : Resource<Nothing>
     data class Failure(
         val isNetworkError: Boolean,
         val errorCode: Int?,

@@ -14,7 +14,7 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 
 @Composable
 fun LottieLoader(raw:Int,
-                 modifier:Modifier = Modifier.fillMaxSize(),
+                 modifier:Modifier = Modifier.fillMaxSize(0F),
                  alignment:Alignment = Alignment.Center
 ) {
 

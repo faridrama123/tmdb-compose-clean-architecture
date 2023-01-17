@@ -31,8 +31,4 @@ object AppModule {
         return NetworkUtil(context)
     }
 
-//    @Provides
-//    @Singleton
-//    fun provideLogger():Logger = Logger()
-
 }

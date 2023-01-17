@@ -87,6 +87,10 @@ dependencies {
 
     implementation "com.google.accompanist:accompanist-navigation-animation:0.26.3-beta"
     implementation "com.google.accompanist:accompanist-swiperefresh:0.26.3-beta"
+
+
+    // Paging 3.0
+    implementation("androidx.paging:paging-compose:$paging_compose")
 }
 
 // Allow references to generated code

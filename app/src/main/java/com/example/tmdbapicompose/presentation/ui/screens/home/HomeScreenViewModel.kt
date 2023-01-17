@@ -1,13 +1,15 @@
 package com.example.tmdbapicompose.presentation.ui.screens.home
 
 
+import android.util.Log
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.tmdbapicompose.domain.models.GenreMovieEntity
-import com.example.tmdbapicompose.domain.models.MoviePopularEntity
+import com.example.tmdbapicompose.domain.models.MoviePopularObjEntity
 import com.example.tmdbapicompose.domain.usecase.UseCases
-import com.example.tmdbapicompose.domain.utils.Logger
 import com.example.tmdbapicompose.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -15,15 +17,15 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
-@HiltViewModel      //Mandatory for Hilt to Inject ViewModel
+@HiltViewModel
 class HomeScreenViewModel
-@Inject constructor( // Hilt constructor injection
+@Inject constructor(
     private val useCases: UseCases,
-    ) //Constructor Injection
+    )
     : ViewModel() {
 
-    private val _movieRes = MutableStateFlow<Resource<MoviePopularEntity>>(Resource.Loading())
-    var movieRes: StateFlow<Resource<MoviePopularEntity>> = _movieRes.asStateFlow()
+    private val _movieRes = mutableStateOf<List<MoviePopularObjEntity>>(emptyList())
+    val movieRes: State<List<MoviePopularObjEntity>> = _movieRes
 
 
     private val _genreRes = MutableStateFlow<Resource<GenreMovieEntity>>(Resource.Loading())
@@ -45,15 +47,27 @@ class HomeScreenViewModel
         fetchAllData("all", 1)
     }
 
-
+    private fun <T> merge(first: List<T>, second: List<T>): List<T> {
+        return first + second
+    }
     fun fetchAllData(genre: String, page: Int) {
         viewModelScope.launch {
-            _movieRes.value =
-                useCases.getMoviePopularUseCase(genre, page)
+            when(val result = useCases.getMoviePopularUseCase(genre, page)){
+                is Resource.Success -> {
+                    if(page == 1){
+                        _movieRes.value = result.data?.results!!
+                    }else {
+                        _movieRes.value = merge(_movieRes.value, result.data?.results!!)
+                    }
+                    Log.d("size of",  _movieRes.value.size.toString())
+                }is Resource.Error ->{
+            }else ->{}
             }
+
+        }
     }
 
-    fun fetchAllGenre() {
+    private fun fetchAllGenre() {
         viewModelScope.launch {
             _genreRes.value =
                 useCases.getGenrUseCase()

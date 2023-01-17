@@ -1,7 +1,6 @@
 package com.example.tmdbapicompose.presentation.ui.screens.movieDetail
 
 import android.annotation.SuppressLint
-import android.util.Log
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -30,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -48,7 +48,7 @@ fun MovieDetailScreen(navController: NavHostController, result: MoviePopularObjE
     viewModel.fetchAllData(result.id, 1)
     viewModel.fetchVideoMovie(result.id)
 
-    val movieState = viewModel.movieRes.collectAsState()
+    val movieState = viewModel.movieRes.value
     val videoMovieState = viewModel.videoMovieRes.collectAsState()
 
 
@@ -154,6 +154,7 @@ fun MovieDetailScreen(navController: NavHostController, result: MoviePopularObjE
                         modifier = Modifier.padding(0.dp, 10.dp)
                     )
                     LoadVideo(videoMovieState.value)
+                    Spacer(modifier = Modifier.height(10.dp))
                     Text(
                         text = "Synopsis",
                         color = Color.Black,
@@ -162,7 +163,7 @@ fun MovieDetailScreen(navController: NavHostController, result: MoviePopularObjE
                         modifier = Modifier.padding(0.dp, 10.dp)
                     )
                     Spacer(modifier = Modifier.height(10.dp))
-                    Text(text = it.overview, color = Color.Black, fontSize = 14.sp)
+                    Text(text = it.overview, color = Color.Black, fontSize = 14.sp, textAlign = TextAlign.Justify)
                     Text(
                         text = "Review",
                         color = Color.Black,
@@ -173,7 +174,7 @@ fun MovieDetailScreen(navController: NavHostController, result: MoviePopularObjE
                     Row(
                         modifier = Modifier.height(240.dp)
                     ) {
-                        LoadStateLayout(movieState.value, viewModel, result.id)
+                        LoadStateLayout(movieState, viewModel, result.id)
                         Spacer(modifier = Modifier.width(10.dp).fillMaxHeight())
                     }
 
@@ -229,52 +230,30 @@ fun LoadVideo(
 
 @Composable
 fun LoadStateLayout(
-    movieState: Resource<ReviewEntity>,
+    movieState: List<ReviewObjEntity>,
     vm: MovieDetailScreenViewModel,
     movieId: Int,
 
     ) {
-
-    when (movieState) {
-        is Resource.Success -> {
-            val reviewList : List<ReviewObjEntity> = movieState.data!!.results
-            val reviewCacheList = vm.cacheReview
-
-            Log.d("size of review", reviewList.size.toString())
-            if(reviewList.isNotEmpty()) {
-                reviewCacheList.value = reviewList
-            }
-            if(reviewCacheList.value !== null){
                 LazyColumn  {
-                    itemsIndexed(reviewCacheList.value!!) { index, it ->
+                    itemsIndexed(movieState) { index, it ->
                         Text(text = it.author, color = Color.Blue, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 0.dp))
                         Text(text = "${it.author_details.rating}/10", color = Color.Black, fontSize = 14.sp, modifier = Modifier.padding(horizontal = 0.dp))
                         Text(text = it.content, color = Color.Black, maxLines = 2, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 0.dp))
                         Spacer(modifier = Modifier.height(20.dp))
                         LaunchedEffect(key1 = Unit){
-                            if (index == reviewCacheList.value!!.lastIndex) {
+                            if (index == movieState.lastIndex) {
                                 vm.lastIndex.value = vm.lastIndex.value!! + 1
-                                if(vm.lastIndex.value!! > 0){
+                                if(vm.lastIndex.value!! > 1){
                                     vm.page.value = vm.page.value!! + 1
                                     vm.fetchAllData(movieId, vm.page.value!!)
                                     vm.lastIndex.value = 0
                                 }
                             }
-
                         }
                     }
                 }
 
-            }
 
-        }
-        is Resource.Loading -> {
-            LottieLoader(R.raw.loading)
-        }
-        is Resource.Error -> {
-            Toast.makeText(LocalContext.current,"failed", Toast.LENGTH_SHORT).show()
-        }
-
-    }
 
 }

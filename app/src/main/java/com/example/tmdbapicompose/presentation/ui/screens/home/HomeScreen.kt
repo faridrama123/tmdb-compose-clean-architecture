@@ -50,7 +50,7 @@ fun HomeScreen(navController: NavHostController, logger: Logger) {
     logger.i("Home Screen............")
 
     val viewModel = hiltViewModel<HomeScreenViewModel>()
-    val movieState = viewModel.movieRes.collectAsState()
+    val movieState = viewModel.movieRes
     val genreState = viewModel.genreRes.collectAsState()
     when(val genreStateData: Resource<GenreMovieEntity> = genreState.value){
         is Resource.Success -> {
@@ -89,14 +89,15 @@ fun HomeScreen(navController: NavHostController, logger: Logger) {
 
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     SwipeRefresh(state = swipeRefreshState, onRefresh = { viewModel.movieId.value?.let {
-                        viewModel.fetchAllData(
-                            it, 1)
+                        viewModel.page.value = 1
+                        viewModel.fetchAllData(it, 1)
                     } }) {
                         LoadStateLayout(
                             movieState = movieState.value,
                             navController = navController,
                             viewModel = viewModel,
-                        ){
+                        )
+                        {
                             swipeRefreshState.isRefreshing = !it
                         }
                     }
@@ -111,43 +112,25 @@ fun HomeScreen(navController: NavHostController, logger: Logger) {
         is Resource.Error -> {
             Toast.makeText(LocalContext.current,"failed",Toast.LENGTH_SHORT).show()
         }
-        else -> {
 
-        }
     }
 }
 
 
 @Composable
 fun LoadStateLayout(
-    movieState: com.example.tmdbapicompose.utils.Resource<MoviePopularEntity>,
+    movieState: List<MoviePopularObjEntity>,
     navController: NavHostController,
     viewModel: HomeScreenViewModel,
     onLoad:(loaded:Boolean)->Unit
 ) {
 
-    when (movieState) {
-        is com.example.tmdbapicompose.utils.Resource.Success -> {
-            onLoad(true)
-            LoadMainContent(
-                movieList = movieState.data?.results!!,
-                navController = navController,
-                vm = viewModel,
-            )
-        }
-        is com.example.tmdbapicompose.utils.Resource.Loading -> {
-            LottieLoader(R.raw.loading)
-            onLoad(false)
-        }
-        is com.example.tmdbapicompose.utils.Resource.Error -> {
-            onLoad(false)
-            Toast.makeText(LocalContext.current,"failed",Toast.LENGTH_SHORT).show()
-        }
-        else -> {
-
-        }
-    }
-
+    LoadMainContent(
+        movieList = movieState,
+        navController = navController,
+        vm = viewModel,
+    )
+    onLoad(true)
 }
 
 @Composable
@@ -193,7 +176,6 @@ fun LoadMainContent(
                                     vm.lastIndex.value = 0
                                 }
                             }
-
                         }
                     }
                 }

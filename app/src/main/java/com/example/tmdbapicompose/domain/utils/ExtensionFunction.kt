@@ -1,8 +1,6 @@
 package com.example.tmdbapicompose.domain.utils
 
-import android.content.Context
 import android.util.Log
-import android.widget.Toast
 import androidx.navigation.NavHostController
 
 
@@ -25,4 +23,4 @@ fun NavHostController.popNavigate(route: String) {
 
 fun showLog(str: String) = Log.d("LogTag", str)
 
-fun showToast(context: Context,str: String) = Toast.makeText(context,str,Toast.LENGTH_SHORT).show()
+//fun showToast(context: Context,str: String) = Toast.makeText(context,str,Toast.LENGTH_SHORT).show()

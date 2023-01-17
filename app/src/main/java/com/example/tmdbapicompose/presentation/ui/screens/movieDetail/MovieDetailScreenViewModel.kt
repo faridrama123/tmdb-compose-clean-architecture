@@ -1,11 +1,14 @@
 package com.example.tmdbapicompose.presentation.ui.screens.movieDetail
 
+import android.util.Log
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.tmdbapicompose.domain.models.*
 import com.example.tmdbapicompose.domain.usecase.UseCases
-import com.example.tmdbapicompose.domain.utils.Logger
+import com.example.tmdbapicompose.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,28 +17,22 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
-@HiltViewModel      //Mandatory for Hilt to Inject ViewModel
+@HiltViewModel
 class MovieDetailScreenViewModel
-@Inject constructor( // Hilt constructor injection
+@Inject constructor(
     private val useCases: UseCases,
-) //Constructor Injection
+)
     : ViewModel() {
 
 
-    private val _movieRes = MutableStateFlow<com.example.tmdbapicompose.utils.Resource<ReviewEntity>>(
-        com.example.tmdbapicompose.utils.Resource.Loading()
+    private val _movieRes = mutableStateOf<List<ReviewObjEntity>>(emptyList())
+    val movieRes: State<List<ReviewObjEntity>> = _movieRes
+
+
+    private val _videoMovieRes = MutableStateFlow<Resource<VideoMovieEntity>>(Resource.Loading()
     )
-    var movieRes: StateFlow<com.example.tmdbapicompose.utils.Resource<ReviewEntity>> = _movieRes.asStateFlow()
+    var videoMovieRes: StateFlow<Resource<VideoMovieEntity>> = _videoMovieRes.asStateFlow()
 
-
-
-    private val _videoMovieRes = MutableStateFlow<com.example.tmdbapicompose.utils.Resource<VideoMovieEntity>>(        com.example.tmdbapicompose.utils.Resource.Loading()
-    )
-    var videoMovieRes: StateFlow<com.example.tmdbapicompose.utils.Resource<VideoMovieEntity>> = _videoMovieRes.asStateFlow()
-
-    val cacheReview: MutableLiveData<List<ReviewObjEntity>> by lazy {
-        MutableLiveData<List<ReviewObjEntity>>()
-    }
 
     val page: MutableLiveData<Int> by lazy {
         MutableLiveData<Int>(1)
@@ -45,12 +42,27 @@ class MovieDetailScreenViewModel
     }
 
 
+    fun <T> merge(first: List<T>, second: List<T>): List<T> {
+        return first + second
+    }
+
     fun fetchAllData(id: Int, page: Int) {
         viewModelScope.launch {
-            _movieRes.value =
-                useCases.getReviewMovieUseCase(id, page)
+            when(val result = useCases.getReviewMovieUseCase(id, page)){
+                is Resource.Success -> {
+                    if(page == 1){
+                        _movieRes.value = result.data?.results!!
+                    }else {
+                        _movieRes.value = merge(_movieRes.value, result.data?.results!!)
+                    }
+                    Log.d("size of",  _movieRes.value.size.toString())
+                }is Resource.Error ->{
+            }else ->{}
+            }
+
         }
     }
+
     fun fetchVideoMovie(id: Int) {
         viewModelScope.launch {
             _videoMovieRes.value =

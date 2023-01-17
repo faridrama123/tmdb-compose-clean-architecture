@@ -1,7 +1,6 @@
 package com.example.tmdbapicompose.domain.usecase
 
 import com.example.tmdbapicompose.data.repository.Repository
-import com.example.tmdbapicompose.domain.models.ReviewEntity
 import com.example.tmdbapicompose.domain.models.VideoMovieEntity
 import com.example.tmdbapicompose.utils.Resource
 

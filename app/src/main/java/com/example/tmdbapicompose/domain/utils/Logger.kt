@@ -32,11 +32,6 @@ class Logger @Inject constructor(){
         return buffer.toString()
     }
 
-    fun v(msg: String) {
-        if (LOG_ENABLE && Log.isLoggable(TAG, Log.VERBOSE)) {
-            Log.v(TAG, buildMsg(msg))
-        }
-    }
 
     fun d(msg: String) {
         if (LOG_ENABLE && Log.isLoggable(TAG, Log.DEBUG)) {
@@ -50,27 +45,4 @@ class Logger @Inject constructor(){
         }
     }
 
-    fun w(msg: String) {
-        if (LOG_ENABLE && Log.isLoggable(TAG, Log.WARN)) {
-            Log.w(TAG, buildMsg(msg))
-        }
-    }
-
-    fun w(msg: String, e: Exception?) {
-        if (LOG_ENABLE && Log.isLoggable(TAG, Log.WARN)) {
-            Log.w(TAG, buildMsg(msg), e)
-        }
-    }
-
-    fun e(msg: String) {
-        if (LOG_ENABLE && Log.isLoggable(TAG, Log.ERROR)) {
-            Log.e(TAG, buildMsg(msg))
-        }
-    }
-
-    fun e(msg: String, e: Exception?) {
-        if (LOG_ENABLE && Log.isLoggable(TAG, Log.ERROR)) {
-            Log.e(TAG, buildMsg(msg), e)
-        }
-    }
 }

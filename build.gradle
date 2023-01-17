@@ -4,6 +4,7 @@ buildscript {
         nav_version = '2.5.2'
         hilt_version = '2.42'
         lottieVersion = '5.2.0'
+        paging_compose = "1.0.0-alpha14"
     }
 
     dependencies {

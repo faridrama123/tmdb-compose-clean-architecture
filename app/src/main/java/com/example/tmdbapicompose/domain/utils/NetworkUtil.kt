@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.properties.Delegates
 
-val TAG = "C-Manager"
+const val TAG = "C-Manager"
 
 class NetworkUtil(context: Context) : LiveData<Boolean>() {
 
@@ -25,7 +25,7 @@ class NetworkUtil(context: Context) : LiveData<Boolean>() {
     object Variables {
         var checkvalue : Boolean? = null
         var isNetworkConnected: Boolean by Delegates.observable(false) { property, oldValue, newValue ->
-            Log.i("Network connectivity", "$newValue")
+            Log.i("Network connectivity", "$newValue $oldValue $property")
             checkvalue = newValue
         }
     }

@@ -37,7 +37,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.tmdbapicompose.R
+import com.example.tmdbapicompose.data.repository.response.VideoMovieObjResponse
 import com.example.tmdbapicompose.domain.models.*
+import com.example.tmdbapicompose.presentation.ui.customComposables.CenterCircularProgressBar
 import com.example.tmdbapicompose.presentation.ui.customComposables.LottieLoader
 import com.example.tmdbapicompose.utils.Resource
 
@@ -154,7 +156,6 @@ fun MovieDetailScreen(navController: NavHostController, result: MoviePopularObjE
                         modifier = Modifier.padding(0.dp, 10.dp)
                     )
                     LoadVideo(videoMovieState.value)
-                    Spacer(modifier = Modifier.height(10.dp))
                     Text(
                         text = "Synopsis",
                         color = Color.Black,
@@ -196,27 +197,33 @@ fun LoadVideo(
 
     when (videoMovieState) {
         is Resource.Success -> {
-            Row(
-                modifier = Modifier.height(240.dp)
-            ) {
-                AndroidView(
-                    factory = {
-                        WebView(it).apply {
-                            settings.javaScriptEnabled = true
-                            webViewClient = WebViewClient()
-                            webChromeClient = WebChromeClient()
-                        }
-                    },
-                    update = {
-                        it.loadUrl("https://www.youtube.com/watch?v=${videoMovieState.data?.results?.get(0)?.key}")
-                    },
-                    modifier = Modifier.fillMaxSize()
-                )
-                Spacer(modifier = Modifier.width(10.dp).fillMaxHeight())
+            val videoList : List<VideoMovieObjEntity>? = videoMovieState.data?.results;
+            var videoUrl = "404"
+            if(videoList?.isNotEmpty() == true) {
+                videoUrl = videoList[0].key.toString()
             }
+                Row(
+                    modifier = Modifier.height(240.dp)
+                ) {
+                    AndroidView(
+                        factory = {
+                            WebView(it).apply {
+                                settings.javaScriptEnabled = true
+                                webViewClient = WebViewClient()
+                                webChromeClient = WebChromeClient()
+                            }
+                        },
+                        update = {
+                            it.loadUrl("https://www.youtube.com/watch?v=${videoUrl}")
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    Spacer(modifier = Modifier.width(10.dp).fillMaxHeight())
 
+            }
         }
         is Resource.Loading -> {
+            CenterCircularProgressBar()
             LottieLoader(R.raw.loading)
         }
         is Resource.Error -> {
